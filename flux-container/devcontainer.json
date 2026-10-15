@@ -1,0 +1,38 @@
+{
+  "name": "Claude Code Sandbox",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
+  },
+  "remoteUser": "vscode",
+  // Состояние, которое должно пережить удаление контейнера и томов Docker,
+  // лежит на маке в ~/.devcontainer-state/arch/: сессии и настройки Claude,
+  // навыки ~/.agents (ru-text), история шелла. initializeCommand выполняется
+  // на маке до старта контейнера: bind-монтирование требует, чтобы папки уже были.
+  // chmod 700: в claude/ лежит .credentials.json.
+  "initializeCommand": "mkdir -p \"$HOME/.devcontainer-state/arch/claude\" \"$HOME/.devcontainer-state/arch/agents\" \"$HOME/.devcontainer-state/arch/shell-history\" && chmod 700 \"$HOME/.devcontainer-state\"",
+  "mounts": [
+    "source=${localEnv:HOME}/.devcontainer-state/arch/claude,target=/home/vscode/.claude,type=bind",
+    "source=${localEnv:HOME}/.devcontainer-state/arch/agents,target=/home/vscode/.agents,type=bind",
+    "source=${localEnv:HOME}/.devcontainer-state/arch/shell-history,target=/home/vscode/.shell-history,type=bind",
+    // VS Code Server и расширения: кеш, после Rebuild не качаются заново.
+    // Потерять его не страшно, поэтому именованный том, а не папка на маке.
+    "source=arch-vscode-server,target=/home/vscode/.vscode-server,type=volume"
+  ],
+  "containerEnv": {
+    // .claude.json тоже ляжет в ~/.claude, а не в ~, и сохранится вместе с сессиями.
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "redhat.vscode-yaml",
+        "hashicorp.terraform",
+        "timonwong.shellcheck"
+      ]
+    }
+  }
+}
